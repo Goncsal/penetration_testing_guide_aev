@@ -1,0 +1,5 @@
+requests>=2.28
+# optional
+pwntools>=4.11      ; platform_system == "Linux"
+git-dumper
+flask-unsign

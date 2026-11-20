@@ -1,0 +1,5 @@
+wordlists/big/
+__pycache__/
+*.pyc
+out_repo/
+*.zip

